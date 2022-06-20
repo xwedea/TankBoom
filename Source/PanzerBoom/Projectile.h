@@ -43,7 +43,7 @@ private:
 		class UParticleSystem * HitParticles;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-		class UProjectileParticleComp * TrailParticles;
+		class UParticleSystemComponent * TrailParticles;
 
 	UPROPERTY(EditAnywhere, Category="Sounds")
 		USoundBase * LaunchSound;

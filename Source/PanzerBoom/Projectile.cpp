@@ -5,7 +5,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
-#include "ProjectileParticleComp.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundBase.h"
 #include "Tower.h"
 
@@ -23,7 +23,7 @@ AProjectile::AProjectile()
 	MovementComp->InitialSpeed = 1200;
 	MovementComp->MaxSpeed = 1500;
 
-	TrailParticles = CreateDefaultSubobject<UProjectileParticleComp>("Trail Particles");
+	TrailParticles = CreateDefaultSubobject<UParticleSystemComponent>("Trail Particles");
 	TrailParticles->SetupAttachment(RootComponent);
 
 

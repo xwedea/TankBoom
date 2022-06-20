@@ -18,6 +18,7 @@ public:
 
 protected:
 	void RotateTurret(FVector ToTarget);
+	void RotateTurret(FRotator ToRotation);
 	void Fire();
 
 

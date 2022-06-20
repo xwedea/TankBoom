@@ -30,27 +30,24 @@ void ATank::BeginPlay()
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	// UE_LOG(LogTemp, Warning, TEXT("Rotation: %s"), *LeftTSRotation.ToString());
 
-	FHitResult HitResult;
-	if (TankController) {
-		TankController->GetHitResultUnderCursor(
-			ECollisionChannel::ECC_Visibility,
-			false,
-			HitResult
-		);
-		FVector HitPoint = HitResult.ImpactPoint;
+	FRotator DeltaTurretRot = TankController->GetControlRotation();
+	
+	
+	
+	// FHitResult HitResult;
+	// if (TankController) {
+	// 	TankController->GetHitResultUnderCursor(
+	// 		ECollisionChannel::ECC_Visibility,
+	// 		false,
+	// 		HitResult
+	// 	);
+	// 	FVector HitPoint = HitResult.ImpactPoint;
 
-		// DrawDebugSphere(
-		// 	GetWorld(),
-		// 	HitPoint,
-		// 	20,
-		// 	50,
-		// 	FColor::Red
-		// );	
+	// 	RotateTurret(HitPoint);
 
-		RotateTurret(HitPoint);
-
-	}
+	// }
 	
 }
 

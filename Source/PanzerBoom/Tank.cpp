@@ -30,11 +30,8 @@ void ATank::BeginPlay()
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// UE_LOG(LogTemp, Warning, TEXT("Rotation: %s"), *LeftTSRotation.ToString());
-
-	FRotator DeltaTurretRot = TankController->GetControlRotation();
 	
-	
+	RotateTurret();	
 	
 	// FHitResult HitResult;
 	// if (TankController) {
@@ -46,9 +43,37 @@ void ATank::Tick(float DeltaTime)
 	// 	FVector HitPoint = HitResult.ImpactPoint;
 
 	// 	RotateTurret(HitPoint);
-
 	// }
 	
+}
+
+void ATank::RotateTurret() {
+	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
+	float controllerY = GetInputAxisValue("TurretForward");
+	if (controllerX == 0 && controllerY == 0) return;
+
+	FVector vectorX = FVector(0, controllerX, 0);
+	FVector vectorY = FVector(controllerY, 0, 0);
+	FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
+	// UE_LOG(LogTemp, Warning, TEXT("Controller Local Rotation: %s"), *LocalControllerRotation.ToString());
+
+	FRotator CameraRotation = FRotator(
+		0,
+		Camera->GetComponentRotation().Yaw,
+		0
+	);
+	UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
+
+	FRotator FinalRotation = LocalControllerRotation+CameraRotation;
+	UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
+
+	FRotator NewRotation = FMath::RInterpConstantTo(
+		TurretMesh->GetComponentRotation(),
+		FinalRotation,
+		GetWorld()->GetDeltaSeconds(),
+		TurretTurnRate
+	);
+	TurretMesh->SetWorldRotation(NewRotation);
 }
 
 
@@ -58,6 +83,8 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	PlayerInputComponent->BindAxis("MoveForward", this, &ATank::Move);
 	PlayerInputComponent->BindAxis("Turn", this, &ATank::Turn);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATank::Fire);
+	PlayerInputComponent->BindAxis("TurretRight");
+	PlayerInputComponent->BindAxis("TurretForward");
 
 }
 

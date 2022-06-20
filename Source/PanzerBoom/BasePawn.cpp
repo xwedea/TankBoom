@@ -52,6 +52,9 @@ void ABasePawn::RotateTurret(FVector TargetLoc) {
 	);
 	// Rotation.Roll = 0;
 	TurretMesh->SetWorldRotation(Rotation);
+	UE_LOG(LogTemp, Warning, TEXT("Rotation: %s"), *Rotation.ToString());	
+
+
 }
 
 void ABasePawn::HandleDestruction() {

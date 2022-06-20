@@ -28,6 +28,9 @@ public:
 	void HandleDestruction();
 	bool bAlive = true;
 
+	void RotateTurret();
+
+
 	APlayerController * GetTankController() const { return TankController; }
 
 
@@ -46,6 +49,8 @@ private:
 		float Speed = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement",meta = (AllowPrivateAccess = "true"));
 		float TurnRate = 100;
+	UPROPERTY(EditAnywhere, Category = "Movement");
+		float TurretTurnRate = 200;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 		APlayerController * TankController;

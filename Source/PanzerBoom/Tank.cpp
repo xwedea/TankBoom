@@ -32,19 +32,38 @@ void ATank::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	RotateTurret();	
+	Aim();
 	
-	// FHitResult HitResult;
-	// if (TankController) {
-	// 	TankController->GetHitResultUnderCursor(
-	// 		ECollisionChannel::ECC_Visibility,
-	// 		false,
-	// 		HitResult
-	// 	);
-	// 	FVector HitPoint = HitResult.ImpactPoint;
+}
 
-	// 	RotateTurret(HitPoint);
-	// }
-	
+void ATank::Aim() {
+	FHitResult HitResult;
+	FVector EndLoc = ProjectileSpawnPoint->GetComponentLocation() + \
+		ProjectileSpawnPoint->GetForwardVector() * AimRange;
+
+	FCollisionShape sphere = FCollisionShape::MakeSphere(20);
+
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		ProjectileSpawnPoint->GetComponentLocation(),
+		EndLoc,
+		FQuat::Identity,
+		ECC_GameTraceChannel1,
+		sphere
+	);
+
+	AActor * HitActor = HitResult.GetActor();
+	if (bHit) {
+		if (HitResult.GetActor()->ActorHasTag("Enemy")) {
+			DrawDebugSphere(
+				GetWorld(),
+				HitActor->GetActorLocation(),
+				50,
+				30,
+				FColor::Purple
+			);
+		}
+	}
 }
 
 void ATank::RotateTurret() {
@@ -62,10 +81,10 @@ void ATank::RotateTurret() {
 		Camera->GetComponentRotation().Yaw,
 		0
 	);
-	UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
 
 	FRotator FinalRotation = LocalControllerRotation+CameraRotation;
-	UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
 
 	FRotator NewRotation = FMath::RInterpConstantTo(
 		TurretMesh->GetComponentRotation(),
@@ -75,6 +94,8 @@ void ATank::RotateTurret() {
 	);
 	TurretMesh->SetWorldRotation(NewRotation);
 }
+
+
 
 
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {

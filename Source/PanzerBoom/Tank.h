@@ -30,7 +30,6 @@ public:
 
 	void RotateTurret();
 
-
 	APlayerController * GetTankController() const { return TankController; }
 
 
@@ -56,6 +55,10 @@ private:
 		APlayerController * TankController;
 
 
+	void Aim();
+	
+	UPROPERTY(EditAnywhere, Category="Combat")
+		float AimRange = 1000.f;
 
 	
 };

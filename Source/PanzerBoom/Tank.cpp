@@ -65,25 +65,21 @@ void ATank::Tick(float DeltaTime)
 
 void ATank::AimLock() {
 	if (LockedActor) {
-		HandleTargetUnlock();
+		if (AimedActor == LockedActor) {
+			HandleTargetUnlock();
+		}
+		else {
+			LockedActor = AimedActor;
+		}
 		return;
 	}
 
 	if (AimedActor) {
 		LockedActor = AimedActor;
-
-		// FRotator 
-		
-		// FRotator NewSpringArmRotation = SpringArm->GetComponentRotation();
-		// NewSpringArmRotation.Yaw = TurretMesh->GetComponentRotation().Yaw;
-		// SpringArm->SetWorldRotation(NewSpringArmRotation);
-	
 		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
-
-
-		return;
 	}
 
+	return;
 }
 
 void ATank::HandleTargetUnlock() {
@@ -102,7 +98,8 @@ void ATank::Aim() {
 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(FVector(10, 10, 1));
 	bAiming = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		ProjectileSpawnPoint->GetComponentLocation() + FVector(0, 0, 100),
+		ProjectileSpawnPoint->GetComponentLocation() + \
+			FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
 		EndLoc,
 		FQuat::Identity,
 		ECC_GameTraceChannel1,
@@ -118,7 +115,11 @@ void ATank::Aim() {
 	AimedActor = Cast<ABasePawn>(HitResult.GetActor());
 	if (AimedActor) {
 		if (AimedActor->ActorHasTag("Enemy")) {
-			DrawSphere(AimedActor->GetActorLocation(), FColor::Green);
+		
+			if (AimedActor != LockedActor) {
+				DrawSphere(AimedActor->GetActorLocation(), FColor::Green);
+				
+			}
 		}
 
 	}

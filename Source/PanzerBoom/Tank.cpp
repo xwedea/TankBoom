@@ -93,15 +93,21 @@ void ATank::HandleSwitchTarget() {
 	bool toRight = (controllerX > 0) ? true : false;
 	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
 	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
+	
+
 	FVector CollisionBoxVector = FVector(
 		1,
-		DistanceToTarget,
+		DistanceToTarget * SweepCollisionBoxConst,
 		100
 	);
+	FVector SweepStart = GetActorLocation() + 
+		TurretMesh->GetForwardVector() * DistanceToTarget * SweepCollisionBoxConst;
+	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
+
 
 	DrawDebugBox(
 		GetWorld(),
-		LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
+		SweepEnd,
 		CollisionBoxVector,
 		SweepUnitVector.Rotation().Quaternion(),
 		FColor::Red,
@@ -113,8 +119,8 @@ void ATank::HandleSwitchTarget() {
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		LockedActor->GetActorLocation() + SweepUnitVector *10,
-		LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
+		SweepStart,
+		SweepEnd,
 		SweepUnitVector.Rotation().Quaternion(),
 		ECC_GameTraceChannel2,
 		CollisionBox,

@@ -87,6 +87,6 @@ private:
 
 	void DrawSphere(FVector Loc, const FColor &Color);
 
-	
+	const float SweepCollisionBoxConst = 2.f/3.f;
 
 };

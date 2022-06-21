@@ -149,11 +149,46 @@ void ATank::HandleSwitchTarget() {
 	// }
 }
 
+void ATank::SwitchTargetAfterKill() {
+	FVector SweepStart = LockedActor->GetActorLocation();
+	FVector SweepEnd = SweepStart + FVector(1);
+
+	float SweepSphereRadius = 500.f;
+	// DrawDebugSphere(
+	// 	GetWorld(),
+	// 	SweepStart,
+	// 	SweepSphereRadius,
+	// 	30,
+	// 	FColor::Blue,
+	// 	true
+	// );
+
+	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SweepSphereRadius);
+	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
+	FHitResult HitResult;
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		SweepStart,
+		SweepEnd,
+		FQuat::Identity,
+		ECC_GameTraceChannel2,
+		CollisionSphere,
+		TraceParams
+	);
+
+	if (bHit) {
+		ABasePawn * HitActor = Cast<ABasePawn>(HitResult.GetActor());
+		LockedActor = HitActor;
+	}
+	else {
+		HandleTargetUnlock();
+	}
+}
+
 void ATank::HandleTargetUnlock() {
 	LockedActor = nullptr;
 	SetSpringArmRotationYaw(GetActorRotation().Yaw);
 }
-
 
 void ATank::Aim() {
 

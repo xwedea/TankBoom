@@ -57,7 +57,8 @@ void AToonTanksGameMode::ActorDied(AActor * DeadActor) {
 	else 
 	{
 		if (DeadActor == Tank->GetLockedActor()) {
-			Tank->HandleTargetUnlock();
+			// Tank->HandleTargetUnlock();
+			Tank->SwitchTargetAfterKill();
 		}
 
 		if (ATower * DeadTower = Cast<ATower>(DeadActor)) {

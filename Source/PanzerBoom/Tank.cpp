@@ -45,22 +45,12 @@ void ATank::Tick(float DeltaTime)
 	
 	RotateTurret();
 	Aim();
-
-	if (LockedActor){
-		UE_LOG(LogTemp, Display, TEXT("Locked Actor: %s"), *LockedActor->GetName());
-	}
-	else {
-		UE_LOG(LogTemp, Display, TEXT("NO Locked Actor"));
-	}
-
 	
 	if (LockedActor && LockedActor->bAlive) {
 		DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
 		
 		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 	}
-
-	
 }
 
 void ATank::AimLock() {

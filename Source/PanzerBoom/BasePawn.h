@@ -16,6 +16,8 @@ public:
 	ABasePawn();
 	void HandleDestruction();
 	bool bAlive = true;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		bool bCanAttack = true;
 
 protected:
 	void RotateTurret(FVector ToTarget);

@@ -27,6 +27,7 @@ public:
 	void HandleDestruction();
 	void HandleTargetUnlock();
 	
+	
 
 	void RotateTurret();
 
@@ -49,18 +50,25 @@ private:
 		class UCameraComponent * Camera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement",meta = (AllowPrivateAccess = "true"));
-		float Speed = 100;
+		float Speed = 100.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement",meta = (AllowPrivateAccess = "true"));
-		float TurnRate = 100;
+		float TurnRate = 100.f;
 	UPROPERTY(EditAnywhere, Category = "Movement");
-		float TurretTurnRate = 200;
+		float TurretTurnRate = 200.f;
 	UPROPERTY(EditAnywhere, Category = "Combat");
-		float AimRadius = 100;
+		float AimRadius = 100.f;
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float AimRange = 1000.f;
+	UPROPERTY(EditAnywhere, Category="Combat")
+		float SwitchTargetRadius = 500.f;
+	UPROPERTY(EditAnywhere, Category="Combat")
+		float SwitchTargetRange = 1500.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 		APlayerController * TankController;
+
+	ECollisionChannel AimTraceChannel = ECC_GameTraceChannel1;
+	ECollisionChannel SwitchTargetTraceChannel = ECC_GameTraceChannel2;
 	
 
 
@@ -70,8 +78,12 @@ private:
 
 	ABasePawn * AimedActor = nullptr;
 	ABasePawn * LockedActor = nullptr;
-
 	
+	void HandleSwitchTarget();
+	FTimerHandle SwitchTargetTimerHandle;
+	UPROPERTY(EditAnywhere)
+		float SwitchTargetRate = 0.2f;
+	float SwitchTargetTimer = SwitchTargetRate;
 
 	void DrawSphere(FVector Loc, const FColor &Color);
 

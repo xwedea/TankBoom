@@ -35,7 +35,7 @@ void ATower::Tick(float DeltaTime) {
 }
 
 void ATower::CheckFireCondition() {
-	if (TankInRange()) {
+	if (bCanAttack && TankInRange()) {
 		Fire();
 	}
 }

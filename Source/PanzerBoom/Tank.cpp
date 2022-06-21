@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Tower.h"
+#include "CollisionQueryParams.h"
 
 ATank::ATank() {
 	
@@ -24,6 +25,7 @@ void ATank::BeginPlay()
 	Super::BeginPlay();
 	
 	TankController = Cast<APlayerController>(GetController());
+	// GetWorldTimerManager().SetTimer(SwitchTargetTimerHandle, this, &ATank::HandleSwitchTarget, SwitchTargetRate, true);
 
 }
 
@@ -43,14 +45,17 @@ void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	RotateTurret();
 	Aim();
-	
-	if (LockedActor && LockedActor->bAlive) {
-		DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
-		
-		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
+	RotateTurret();
+
+	if (LockedActor) {
+		HandleSwitchTarget();
+		if (LockedActor->bAlive) {
+			DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
+			SetSpringArmRotationYaw(GetTurretRotation().Yaw);
+		}
 	}
+
 }
 
 void ATank::AimLock() {
@@ -72,6 +77,72 @@ void ATank::AimLock() {
 	return;
 }
 
+void ATank::HandleSwitchTarget() {
+	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+	if (SwitchTargetTimer > 0.f) {
+		SwitchTargetTimer -= DeltaTime;
+		SwitchTargetTimer = (SwitchTargetTimer < 0.f) ? 0.f : SwitchTargetTimer;
+		if (SwitchTargetTimer != 0.f) return;
+	}
+	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
+	if (abs(controllerX) < 0.5) return;
+
+
+	SwitchTargetTimer = SwitchTargetRate;
+	// Collision
+	bool toRight = (controllerX > 0) ? true : false;
+	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
+	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
+	FVector CollisionBoxVector = FVector(
+		1,
+		DistanceToTarget,
+		100
+	);
+
+	DrawDebugBox(
+		GetWorld(),
+		LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
+		CollisionBoxVector,
+		SweepUnitVector.Rotation().Quaternion(),
+		FColor::Red,
+		true
+	);
+	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
+	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
+	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
+	FHitResult HitResult;
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		LockedActor->GetActorLocation() + SweepUnitVector *10,
+		LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
+		SweepUnitVector.Rotation().Quaternion(),
+		ECC_GameTraceChannel2,
+		CollisionBox,
+		TraceParams
+	);
+
+	if (bHit) {
+		AActor * HitActor = HitResult.GetActor();
+		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
+		LockedActor = Cast<ABasePawn>(HitActor);
+	}
+	
+	// SWEEP MULTI
+	// TArray<struct FHitResult> HitResults;
+	// bool bHit = GetWorld()->SweepMultiByChannel(
+	// 	HitResults,
+	// 	LockedActor->GetActorLocation() + SweepUnitVector *10,
+	// 	LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
+	// 	SweepUnitVector.Rotation().Quaternion(),
+	// 	ECC_GameTraceChannel2,
+	// 	CollisionBox,
+	// 	TraceParams
+	// );
+	// for (struct FHitResult HitResult : HitResults) {
+	// 	UE_LOG(LogTemp, Warning, TEXT("Target Switch: %s"), *HitResult.GetActor()->GetActorNameOrLabel());
+	// }
+}
+
 void ATank::HandleTargetUnlock() {
 	LockedActor = nullptr;
 	SetSpringArmRotationYaw(GetActorRotation().Yaw);
@@ -84,8 +155,8 @@ void ATank::Aim() {
 	FVector EndLoc = ProjectileSpawnPoint->GetComponentLocation() + \
 		ProjectileSpawnPoint->GetForwardVector() * AimRange;
 
-	FCollisionShape sphere = FCollisionShape::MakeSphere(AimRadius);
 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(FVector(10, 10, 1));
+	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(AimRadius);
 	bAiming = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		ProjectileSpawnPoint->GetComponentLocation() + \
@@ -93,7 +164,7 @@ void ATank::Aim() {
 		EndLoc,
 		FQuat::Identity,
 		ECC_GameTraceChannel1,
-		sphere
+		CollisionSphere
 	);
 
 	if (!bAiming) {

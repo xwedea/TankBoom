@@ -56,9 +56,6 @@ bool ATower::TankInRange() {
 void ATower::HandleDestruction() {
 	Super::HandleDestruction();
 
-	if (this == Tank->GetLockedActor()) {
-		Tank->SetLockedActor(false);
-	}
 	Destroy();
 }
 

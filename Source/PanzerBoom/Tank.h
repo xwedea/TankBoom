@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "BasePawn.h"
 #include "Tank.generated.h"
-
 /**
  * 
  */
@@ -26,6 +25,7 @@ public:
 	void Move(float Value);
 	void Turn(float Value);
 	void HandleDestruction();
+	void HandleTargetUnlock();
 	
 
 	void RotateTurret();
@@ -33,6 +33,9 @@ public:
 	APlayerController * GetTankController() const { return TankController; }
 	AActor * GetLockedActor() const {return LockedActor;}
 	void SetLockedActor(ABasePawn * Value) {LockedActor = Value;}
+	void SetSpringArmRotation(FRotator Rotation);
+	void SetSpringArmRotationYaw(float Yaw);
+	FRotator GetTurretRotation() const {return TurretMesh->GetComponentRotation();}
 
 protected:
 	// Called when the game starts or when spawned
@@ -52,7 +55,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Movement");
 		float TurretTurnRate = 200;
 	UPROPERTY(EditAnywhere, Category = "Combat");
-		float AimRadius = 30;
+		float AimRadius = 100;
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float AimRange = 1000.f;
 
@@ -71,5 +74,7 @@ private:
 	
 
 	void DrawSphere(FVector Loc, const FColor &Color);
+
+	
 
 };

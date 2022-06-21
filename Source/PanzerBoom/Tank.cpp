@@ -56,20 +56,39 @@ void ATank::Tick(float DeltaTime)
 	
 	if (LockedActor && LockedActor->bAlive) {
 		DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
+		
+		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 	}
+
+	
 }
 
 void ATank::AimLock() {
 	if (LockedActor) {
-		LockedActor = nullptr;
+		HandleTargetUnlock();
 		return;
 	}
 
 	if (AimedActor) {
 		LockedActor = AimedActor;
+
+		// FRotator 
+		
+		// FRotator NewSpringArmRotation = SpringArm->GetComponentRotation();
+		// NewSpringArmRotation.Yaw = TurretMesh->GetComponentRotation().Yaw;
+		// SpringArm->SetWorldRotation(NewSpringArmRotation);
+	
+		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
+
+
 		return;
 	}
 
+}
+
+void ATank::HandleTargetUnlock() {
+	LockedActor = nullptr;
+	SetSpringArmRotationYaw(GetActorRotation().Yaw);
 }
 
 
@@ -80,15 +99,16 @@ void ATank::Aim() {
 		ProjectileSpawnPoint->GetForwardVector() * AimRange;
 
 	FCollisionShape sphere = FCollisionShape::MakeSphere(AimRadius);
-
+	FCollisionShape CollisionBox = FCollisionShape::MakeBox(FVector(10, 10, 1));
 	bAiming = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		ProjectileSpawnPoint->GetComponentLocation(),
+		ProjectileSpawnPoint->GetComponentLocation() + FVector(0, 0, 100),
 		EndLoc,
 		FQuat::Identity,
 		ECC_GameTraceChannel1,
 		sphere
 	);
+
 	if (!bAiming) {
 		AimedActor = nullptr;
 		return;
@@ -96,10 +116,14 @@ void ATank::Aim() {
 
 	AActor * HitActor = HitResult.GetActor();
 	AimedActor = Cast<ABasePawn>(HitResult.GetActor());
-	if (bAiming) {
-		if (HitResult.GetActor()->ActorHasTag("Enemy")) {
-			DrawSphere(HitActor->GetActorLocation(), FColor::Green);
+	if (AimedActor) {
+		if (AimedActor->ActorHasTag("Enemy")) {
+			DrawSphere(AimedActor->GetActorLocation(), FColor::Green);
 		}
+
+	}
+	else {
+		HandleTargetUnlock();
 	}
 
 }
@@ -117,14 +141,14 @@ void ATank::RotateTurret() {
 		FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
 		// UE_LOG(LogTemp, Warning, TEXT("Controller Local Rotation: %s"), *LocalControllerRotation.ToString());
 
-		FRotator CameraRotation = FRotator(
+		FRotator SpringArmRotation = FRotator(
 			0,
-			Camera->GetComponentRotation().Yaw,
+			SpringArm->GetComponentRotation().Yaw,
 			0
 		);
 		// UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
 
-		FRotator FinalRotation = LocalControllerRotation+CameraRotation;
+		FRotator FinalRotation = LocalControllerRotation+SpringArmRotation;
 		// UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
 
 		NewRotation = FMath::RInterpConstantTo(
@@ -180,4 +204,10 @@ void ATank::DrawSphere(FVector Loc, const FColor &Color) {
 		30,
 		Color
 	);
+}
+
+void ATank::SetSpringArmRotationYaw(float Yaw) {
+	FRotator SpringArmRot = SpringArm->GetComponentRotation();
+	SpringArmRot.Yaw = Yaw;
+	SpringArm->SetWorldRotation(SpringArmRot);
 }

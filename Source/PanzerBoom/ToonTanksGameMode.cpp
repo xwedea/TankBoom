@@ -43,7 +43,8 @@ void AToonTanksGameMode::HandleGameStart() {
 
 void AToonTanksGameMode::ActorDied(AActor * DeadActor) {
 	
-	if (DeadActor == Tank) {
+	if (DeadActor == Tank) 
+	{
 		Tank->HandleDestruction();
 		Tank->SetActorTickEnabled(false);
 		
@@ -52,12 +53,18 @@ void AToonTanksGameMode::ActorDied(AActor * DeadActor) {
 		} 
 		GameOver(false);
 		
-	}
-	else if (ATower * DeadTower = Cast<ATower>(DeadActor)) {
-		DeadTower->HandleDestruction();
-		TowerCount--;
-		if (TowerCount == 0) GameOver(true);
+	} 
+	else 
+	{
+		if (DeadActor == Tank->GetLockedActor()) {
+			Tank->HandleTargetUnlock();
+		}
 
+		if (ATower * DeadTower = Cast<ATower>(DeadActor)) {
+			DeadTower->HandleDestruction();
+			TowerCount--;
+			if (TowerCount == 0) GameOver(true);
+		}
 	}
 
 }

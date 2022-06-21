@@ -26,12 +26,13 @@ public:
 	void Move(float Value);
 	void Turn(float Value);
 	void HandleDestruction();
-	bool bAlive = true;
+	
 
 	void RotateTurret();
 
 	APlayerController * GetTankController() const { return TankController; }
-
+	AActor * GetLockedActor() const {return LockedActor;}
+	void SetLockedActor(ABasePawn * Value) {LockedActor = Value;}
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,15 +51,25 @@ private:
 		float TurnRate = 100;
 	UPROPERTY(EditAnywhere, Category = "Movement");
 		float TurretTurnRate = 200;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
-		APlayerController * TankController;
-
-
-	void Aim();
-	
+	UPROPERTY(EditAnywhere, Category = "Combat");
+		float AimRadius = 30;
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float AimRange = 1000.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
+		APlayerController * TankController;
 	
+
+
+	void Aim();
+	bool bAiming = false;
+	void AimLock();
+
+	ABasePawn * AimedActor = nullptr;
+	ABasePawn * LockedActor = nullptr;
+
+	
+
+	void DrawSphere(FVector Loc, const FColor &Color);
+
 };

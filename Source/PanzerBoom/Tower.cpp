@@ -42,7 +42,6 @@ void ATower::CheckFireCondition() {
 
 
 bool ATower::TankInRange() {
-
 	if (Tank) {
 		float Distance = FVector::Dist(GetActorLocation(), Tank->GetActorLocation());
 		
@@ -57,6 +56,9 @@ bool ATower::TankInRange() {
 void ATower::HandleDestruction() {
 	Super::HandleDestruction();
 
+	if (this == Tank->GetLockedActor()) {
+		Tank->SetLockedActor(false);
+	}
 	Destroy();
 }
 

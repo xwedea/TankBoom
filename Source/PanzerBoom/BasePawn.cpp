@@ -58,7 +58,7 @@ void ABasePawn::RotateTurret(FVector TargetLoc) {
 }
 
 void ABasePawn::HandleDestruction() {
-
+	bAlive = false;
 	if (DeathParticles)
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),

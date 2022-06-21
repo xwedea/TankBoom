@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Tower.h"
 
 ATank::ATank() {
 	
@@ -26,24 +27,61 @@ void ATank::BeginPlay()
 
 }
 
+void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis("MoveForward", this, &ATank::Move);
+	PlayerInputComponent->BindAxis("Turn", this, &ATank::Turn);
+	PlayerInputComponent->BindAxis("TurretRight");
+	PlayerInputComponent->BindAxis("TurretForward");
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATank::Fire);
+	PlayerInputComponent->BindAction("AimLock", IE_Pressed, this, &ATank::AimLock);
+}
+
 // Called every frame
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	RotateTurret();	
+	RotateTurret();
 	Aim();
+
+	if (LockedActor){
+		UE_LOG(LogTemp, Display, TEXT("Locked Actor: %s"), *LockedActor->GetName());
+	}
+	else {
+		UE_LOG(LogTemp, Display, TEXT("NO Locked Actor"));
+	}
+
 	
+	if (LockedActor && LockedActor->bAlive) {
+		DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
+	}
 }
 
+void ATank::AimLock() {
+	if (LockedActor) {
+		LockedActor = nullptr;
+		return;
+	}
+
+	if (AimedActor) {
+		LockedActor = AimedActor;
+		return;
+	}
+
+}
+
+
 void ATank::Aim() {
+
 	FHitResult HitResult;
 	FVector EndLoc = ProjectileSpawnPoint->GetComponentLocation() + \
 		ProjectileSpawnPoint->GetForwardVector() * AimRange;
 
-	FCollisionShape sphere = FCollisionShape::MakeSphere(20);
+	FCollisionShape sphere = FCollisionShape::MakeSphere(AimRadius);
 
-	bool bHit = GetWorld()->SweepSingleByChannel(
+	bAiming = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		ProjectileSpawnPoint->GetComponentLocation(),
 		EndLoc,
@@ -51,63 +89,63 @@ void ATank::Aim() {
 		ECC_GameTraceChannel1,
 		sphere
 	);
+	if (!bAiming) {
+		AimedActor = nullptr;
+		return;
+	}
 
 	AActor * HitActor = HitResult.GetActor();
-	if (bHit) {
+	AimedActor = Cast<ABasePawn>(HitResult.GetActor());
+	if (bAiming) {
 		if (HitResult.GetActor()->ActorHasTag("Enemy")) {
-			DrawDebugSphere(
-				GetWorld(),
-				HitActor->GetActorLocation(),
-				50,
-				30,
-				FColor::Purple
-			);
+			DrawSphere(HitActor->GetActorLocation(), FColor::Green);
 		}
 	}
+
 }
 
 void ATank::RotateTurret() {
-	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
-	float controllerY = GetInputAxisValue("TurretForward");
-	if (controllerX == 0 && controllerY == 0) return;
+	FRotator NewRotation;
 
-	FVector vectorX = FVector(0, controllerX, 0);
-	FVector vectorY = FVector(controllerY, 0, 0);
-	FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
-	// UE_LOG(LogTemp, Warning, TEXT("Controller Local Rotation: %s"), *LocalControllerRotation.ToString());
+	if (!LockedActor) {
+		float controllerX = GetInputAxisValue(TEXT("TurretRight"));
+		float controllerY = GetInputAxisValue("TurretForward");
+		if (controllerX == 0 && controllerY == 0) return;
 
-	FRotator CameraRotation = FRotator(
-		0,
-		Camera->GetComponentRotation().Yaw,
-		0
-	);
-	// UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
+		FVector vectorX = FVector(0, controllerX, 0);
+		FVector vectorY = FVector(controllerY, 0, 0);
+		FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
+		// UE_LOG(LogTemp, Warning, TEXT("Controller Local Rotation: %s"), *LocalControllerRotation.ToString());
 
-	FRotator FinalRotation = LocalControllerRotation+CameraRotation;
-	// UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
+		FRotator CameraRotation = FRotator(
+			0,
+			Camera->GetComponentRotation().Yaw,
+			0
+		);
+		// UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
 
-	FRotator NewRotation = FMath::RInterpConstantTo(
-		TurretMesh->GetComponentRotation(),
-		FinalRotation,
-		GetWorld()->GetDeltaSeconds(),
-		TurretTurnRate
-	);
+		FRotator FinalRotation = LocalControllerRotation+CameraRotation;
+		// UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
+
+		NewRotation = FMath::RInterpConstantTo(
+			TurretMesh->GetComponentRotation(),
+			FinalRotation,
+			GetWorld()->GetDeltaSeconds(),
+			TurretTurnRate
+		);
+	}
+	else {
+		FVector ToTarget = LockedActor->GetActorLocation() - GetActorLocation();
+		NewRotation = FRotator(0, ToTarget.Rotation().Yaw, 0);
+	}
+
+
 	TurretMesh->SetWorldRotation(NewRotation);
 }
 
 
 
 
-void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &ATank::Move);
-	PlayerInputComponent->BindAxis("Turn", this, &ATank::Turn);
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATank::Fire);
-	PlayerInputComponent->BindAxis("TurretRight");
-	PlayerInputComponent->BindAxis("TurretForward");
-
-}
 
 
 void ATank::Move(float Value) {
@@ -130,8 +168,16 @@ void ATank::Turn(float Value) {
 void ATank::HandleDestruction() {
 	Super::HandleDestruction();
 
-	bAlive = false;
 	SetActorHiddenInGame(true);
 	SetActorTickEnabled(false);
 }
 
+void ATank::DrawSphere(FVector Loc, const FColor &Color) {
+	DrawDebugSphere(	
+		GetWorld(),
+		Loc,
+		50,
+		30,
+		Color
+	);
+}

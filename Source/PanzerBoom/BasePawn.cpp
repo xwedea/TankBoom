@@ -28,8 +28,20 @@ ABasePawn::ABasePawn()
 
 }
 
+void ABasePawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+void ABasePawn::HandleAllCountdowns() {
+	// UE_LOG(LogTemp, Display, TEXT("BASEPAWN HANDLE ALL"));
+	Countdown(FireRate, FireCountdown);
+}
 
 void ABasePawn::Fire() {
+	if (FireCountdown != 0.f) return;
+	FireCountdown = FireRate;
+
 	FVector Location = ProjectileSpawnPoint->GetComponentLocation();
 	FRotator Rotation = ProjectileSpawnPoint->GetComponentRotation();
 	auto Projectile = GetWorld()->SpawnActor<AProjectile>(
@@ -54,7 +66,6 @@ void ABasePawn::RotateTurret(FVector TargetLoc) {
 	TurretMesh->SetWorldRotation(Rotation);
 	// UE_LOG(LogTemp, Warning, TEXT("Rotation: %s"), *Rotation.ToString());	
 
-
 }
 
 void ABasePawn::HandleDestruction() {
@@ -77,4 +88,30 @@ void ABasePawn::HandleDestruction() {
 
 	if (DeathCameraShakeClass)
 		GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(DeathCameraShakeClass);
+}
+
+bool ABasePawn::IsCoolingDown(float &Rate, float &Countdown) {
+	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+	// UE_LOG(LogTemp, Display, TEXT("Rate: %f, Countdown: %f"), Rate, Countdown);
+
+	if (Countdown > 0.f) {
+		Countdown -= DeltaTime;
+		Countdown = (Countdown < 0.f) ? 0.f : Countdown;
+		if (Countdown != 0.f) return true;
+	}
+	Countdown = Rate;
+	return false;
+}
+
+void ABasePawn::Countdown(float &Rate, float &Countdown) {
+	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+
+	if (Countdown > 0.f) {
+		Countdown -= DeltaTime;
+		Countdown = (Countdown < 0.f) ? 0.f : Countdown;
+	}
+	else if (Countdown < 0) {
+		UE_LOG(LogTemp, Warning, TEXT("%s: Countdown below zero!"), *GetActorNameOrLabel());
+	}
+	
 }

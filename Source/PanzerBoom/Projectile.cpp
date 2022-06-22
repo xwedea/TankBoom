@@ -54,14 +54,14 @@ void AProjectile::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPri
 		Destroy();
 		return;
 	}
+	
 	auto MyOwnerInstigator = MyOwner->GetInstigatorController();
 	auto DamageType = UDamageType::StaticClass();
 
+
+	UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 	if (OtherActor && OtherActor != this && OtherActor != MyOwner) {
 		// UE_LOG(LogTemp, Warning, TEXT("applying damage..."));
-
-		if (Cast<ABasePawn>(OtherActor))
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		if (HitCameraShakeClass) 
 			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(HitCameraShakeClass);
 		

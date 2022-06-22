@@ -19,6 +19,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		bool bCanAttack = true;
 
+	bool IsCoolingDown(float &Rate, float &Countdown);
+
+	void Countdown(float &Rate, float &Countdown);
+
+	virtual void HandleAllCountdowns();
+
+	virtual void Tick(float DeltaTime) override;
+
+
 protected:
 	void RotateTurret(FVector ToTarget);
 	
@@ -33,10 +42,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 		USceneComponent * ProjectileSpawnPoint;
 
-private:
-		
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		TSubclassOf<class AProjectile> ProjectileClass;
+
+	
+private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		class UParticleSystem * DeathParticles;
@@ -46,5 +56,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		TSubclassOf<class UCameraShakeBase> DeathCameraShakeClass;
+
+
+	UPROPERTY(EditAnywhere, Category="Combat|Timer")
+		float FireRate = 0.1f;
+	float FireCountdown = 0.f;
 
 };

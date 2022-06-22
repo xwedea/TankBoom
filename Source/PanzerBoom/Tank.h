@@ -26,9 +26,9 @@ public:
 	void Turn(float Value);
 	void HandleDestruction();
 	void HandleTargetUnlock();
-	
 	void SwitchTargetAfterKill();
 
+	virtual void HandleAllCountdowns() override;
 
 	void RotateTurret();
 
@@ -65,6 +65,10 @@ private:
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float SwitchTargetRange = 1500.f;
 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		TSubclassOf<class AMissile> MissileClass;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 		APlayerController * TankController;
 
@@ -76,19 +80,24 @@ private:
 	void Aim();
 	bool bAiming = false;
 	void AimLock();
-
 	ABasePawn * AimedActor = nullptr;
 	ABasePawn * LockedActor = nullptr;
-	
 	void HandleSwitchTarget();
 	FTimerHandle SwitchTargetTimerHandle;
-	UPROPERTY(EditAnywhere)
+	const float SweepCollisionBoxConst = 2.f/3.f;
+
+
+	UPROPERTY(EditAnywhere, Category="Combat|Timer")
 		float SwitchTargetRate = 0.2f;
-	float SwitchTargetTimer = SwitchTargetRate;
+	float SwitchTargetCountdown = 0.f;
+	UPROPERTY(EditAnywhere, Category="Combat|Timer")
+		float MissileRate = 0.1f;
+	float MissileCountdown = 0.f;
+
+
+	void LaunchMissile();
 
 	void DrawSphere(FVector Loc, const FColor &Color);
-
-	const float SweepCollisionBoxConst = 2.f/3.f;
 
 
 };

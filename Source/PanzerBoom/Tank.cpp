@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "Tower.h"
 #include "CollisionQueryParams.h"
+#include "Missile.h"
 
 ATank::ATank() {
 	
@@ -37,6 +38,7 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	PlayerInputComponent->BindAxis("TurretRight");
 	PlayerInputComponent->BindAxis("TurretForward");
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATank::Fire);
+	PlayerInputComponent->BindAction("LaunchMissile", IE_Pressed, this, &ATank::LaunchMissile);
 	PlayerInputComponent->BindAction("AimLock", IE_Pressed, this, &ATank::AimLock);
 }
 
@@ -44,7 +46,9 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
+	HandleAllCountdowns();
+
 	Aim();
 	RotateTurret();
 
@@ -55,8 +59,13 @@ void ATank::Tick(float DeltaTime)
 			SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 		}
 	}
-
 }
+
+void ATank::HandleAllCountdowns() {
+	Super::HandleAllCountdowns();
+	Countdown(MissileRate, MissileCountdown);
+}
+
 
 void ATank::AimLock() {
 	if (LockedActor) {
@@ -77,18 +86,45 @@ void ATank::AimLock() {
 	return;
 }
 
-void ATank::HandleSwitchTarget() {
-	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
-	if (SwitchTargetTimer > 0.f) {
-		SwitchTargetTimer -= DeltaTime;
-		SwitchTargetTimer = (SwitchTargetTimer < 0.f) ? 0.f : SwitchTargetTimer;
-		if (SwitchTargetTimer != 0.f) return;
+void ATank::LaunchMissile() {
+	if (MissileCountdown != 0.f) return;
+	MissileCountdown = MissileRate;
+
+	FVector Location = ProjectileSpawnPoint->GetComponentLocation() + 
+		ProjectileSpawnPoint->GetForwardVector() * 70;
+	FRotator Rotation = ProjectileSpawnPoint->GetComponentRotation();
+	if (!MissileClass) {
+		UE_LOG(LogTemp, Error, TEXT("%s: No Missile Class!"), *GetActorNameOrLabel());
+		return;
 	}
+	AMissile * Missile = GetWorld()->SpawnActor<AMissile>(
+		MissileClass,
+		Location,
+		Rotation
+	);
+	Missile->SetOwner(this);
+}
+
+
+void ATank::HandleSwitchTarget() {
+	// float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
+	// if (SwitchTargetCountdown > 0.f) {
+	// 	SwitchTargetCountdown -= DeltaTime;
+	// 	SwitchTargetCountdown = (SwitchTargetCountdown < 0.f) ? 0.f : SwitchTargetCountdown;
+	// 	if (SwitchTargetCountdown != 0.f) return;
+	// }
+	// SwitchTargetCountdown = SwitchTargetRate;
+
+	if (IsCoolingDown(SwitchTargetRate, SwitchTargetCountdown)) {
+		UE_LOG(LogTemp, Display, TEXT("Blocked"));
+		return;
+	}
+
 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
 	if (abs(controllerX) < 0.5) return;
 
 
-	SwitchTargetTimer = SwitchTargetRate;
+
 	// Collision
 	bool toRight = (controllerX > 0) ? true : false;
 	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
@@ -105,14 +141,15 @@ void ATank::HandleSwitchTarget() {
 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
 
 
-	DrawDebugBox(
-		GetWorld(),
-		SweepEnd,
-		CollisionBoxVector,
-		SweepUnitVector.Rotation().Quaternion(),
-		FColor::Red,
-		true
-	);
+	// DrawDebugBox(
+	// 	GetWorld(),
+	// 	SweepEnd,
+	// 	CollisionBoxVector,
+	// 	SweepUnitVector.Rotation().Quaternion(),
+	// 	FColor::Red,
+	// 	true
+	// );
+	
 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);

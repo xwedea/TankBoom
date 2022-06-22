@@ -26,46 +26,37 @@ AProjectile::AProjectile()
 	TrailParticles = CreateDefaultSubobject<UParticleSystemComponent>("Trail Particles");
 	TrailParticles->SetupAttachment(RootComponent);
 
-
 }
 
 // Called when the game starts or when spawned
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
-
 	UGameplayStatics::PlaySoundAtLocation(this, LaunchSound, GetActorLocation());
-
 }
 
 // Called every frame
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AProjectile::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult& HitResult) {
-
 	AActor * MyOwner = GetOwner();
 	if (!MyOwner) {
 		Destroy();
 		return;
 	}
-	
 	auto MyOwnerInstigator = MyOwner->GetInstigatorController();
 	auto DamageType = UDamageType::StaticClass();
-
 
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 	if (OtherActor && OtherActor != this && OtherActor != MyOwner) {
 		// UE_LOG(LogTemp, Warning, TEXT("applying damage..."));
-		if (HitCameraShakeClass) 
-			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(HitCameraShakeClass);
+		if (HitCameraShakeClass) GetWorld()->GetFirstPlayerController()
+			->ClientStartCameraShake(HitCameraShakeClass);
 		
-
 		UGameplayStatics::ApplyDamage(
 			OtherActor,
 			Damage,
@@ -84,8 +75,6 @@ void AProjectile::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPri
 		} else UE_LOG(LogTemp, Warning, TEXT("NO HIT PARTICLE"));
 	}
 
-
 	Destroy();
-
 
 }

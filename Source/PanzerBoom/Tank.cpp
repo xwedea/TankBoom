@@ -24,10 +24,7 @@ ATank::ATank() {
 void ATank::BeginPlay()
 {
 	Super::BeginPlay();
-	
 	TankController = Cast<APlayerController>(GetController());
-	// GetWorldTimerManager().SetTimer(SwitchTargetTimerHandle, this, &ATank::HandleSwitchTarget, SwitchTargetRate, true);
-
 }
 
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -48,7 +45,6 @@ void ATank::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HandleAllCountdowns();
-
 	Aim();
 	RotateTurret();
 
@@ -82,7 +78,6 @@ void ATank::AimLock() {
 		LockedActor = AimedActor;
 		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 	}
-
 	return;
 }
 
@@ -107,30 +102,18 @@ void ATank::LaunchMissile() {
 
 
 void ATank::HandleSwitchTarget() {
-	// float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
-	// if (SwitchTargetCountdown > 0.f) {
-	// 	SwitchTargetCountdown -= DeltaTime;
-	// 	SwitchTargetCountdown = (SwitchTargetCountdown < 0.f) ? 0.f : SwitchTargetCountdown;
-	// 	if (SwitchTargetCountdown != 0.f) return;
-	// }
-	// SwitchTargetCountdown = SwitchTargetRate;
-
 	if (IsCoolingDown(SwitchTargetRate, SwitchTargetCountdown)) {
-		UE_LOG(LogTemp, Display, TEXT("Blocked"));
 		return;
 	}
 
 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
 	if (abs(controllerX) < 0.5) return;
 
-
-
 	// Collision
 	bool toRight = (controllerX > 0) ? true : false;
 	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
 	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
 	
-
 	FVector CollisionBoxVector = FVector(
 		1,
 		DistanceToTarget * SweepCollisionBoxConst,
@@ -139,7 +122,6 @@ void ATank::HandleSwitchTarget() {
 	FVector SweepStart = GetActorLocation() + 
 		TurretMesh->GetForwardVector() * DistanceToTarget * SweepCollisionBoxConst;
 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
-
 
 	// DrawDebugBox(
 	// 	GetWorld(),
@@ -169,21 +151,6 @@ void ATank::HandleSwitchTarget() {
 		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
 		LockedActor = Cast<ABasePawn>(HitActor);
 	}
-	
-	// SWEEP MULTI
-	// TArray<struct FHitResult> HitResults;
-	// bool bHit = GetWorld()->SweepMultiByChannel(
-	// 	HitResults,
-	// 	LockedActor->GetActorLocation() + SweepUnitVector *10,
-	// 	LockedActor->GetActorLocation() + SweepUnitVector * SwitchTargetRange,
-	// 	SweepUnitVector.Rotation().Quaternion(),
-	// 	ECC_GameTraceChannel2,
-	// 	CollisionBox,
-	// 	TraceParams
-	// );
-	// for (struct FHitResult HitResult : HitResults) {
-	// 	UE_LOG(LogTemp, Warning, TEXT("Target Switch: %s"), *HitResult.GetActor()->GetActorNameOrLabel());
-	// }
 }
 
 void ATank::SwitchTargetAfterKill() {
@@ -191,14 +158,6 @@ void ATank::SwitchTargetAfterKill() {
 	FVector SweepEnd = SweepStart + FVector(1);
 
 	float SweepSphereRadius = 500.f;
-	// DrawDebugSphere(
-	// 	GetWorld(),
-	// 	SweepStart,
-	// 	SweepSphereRadius,
-	// 	30,
-	// 	FColor::Blue,
-	// 	true
-	// );
 
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SweepSphereRadius);
 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
@@ -306,11 +265,6 @@ void ATank::RotateTurret() {
 
 	TurretMesh->SetWorldRotation(NewRotation);
 }
-
-
-
-
-
 
 void ATank::Move(float Value) {
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);

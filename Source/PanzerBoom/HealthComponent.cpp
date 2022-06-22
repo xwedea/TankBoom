@@ -24,9 +24,7 @@ void UHealthComponent::BeginPlay()
 	// ...
 	Health = MaxHealth;
 	GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::OnDamage);
-
 	GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
-
 }
 
 

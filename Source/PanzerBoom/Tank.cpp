@@ -159,60 +159,6 @@ void ATank::HandleSwitchTarget() {
 
 }
 
-
-
-// void ATank::HandleSwitchTarget() {
-// 	if (IsCoolingDown(SwitchTargetRate, SwitchTargetCountdown)) {
-// 		return;
-// 	}
-
-// 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
-// 	if (abs(controllerX) < 0.5) return;
-
-// 	// Collision
-// 	bool toRight = (controllerX > 0) ? true : false;
-// 	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
-// 	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
-	
-// 	FVector CollisionBoxVector = FVector(
-// 		1,
-// 		DistanceToTarget * SweepCollisionBoxConst,
-// 		100
-// 	);
-// 	FVector SweepStart = GetActorLocation() + 
-// 		TurretMesh->GetForwardVector() * DistanceToTarget * SweepCollisionBoxConst;
-// 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
-
-// 	// DrawDebugBox(
-// 	// 	GetWorld(),
-// 	// 	SweepEnd,
-// 	// 	CollisionBoxVector,
-// 	// 	SweepUnitVector.Rotation().Quaternion(),
-// 	// 	FColor::Red,
-// 	// 	true
-// 	// );
-	
-// 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
-// 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
-// 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
-// 	FHitResult HitResult;
-// 	bool bHit = GetWorld()->SweepSingleByChannel(
-// 		HitResult,
-// 		SweepStart,
-// 		SweepEnd,
-// 		SweepUnitVector.Rotation().Quaternion(),
-// 		ECC_GameTraceChannel2,
-// 		CollisionBox,
-// 		TraceParams
-// 	);
-
-// 	if (bHit) {
-// 		AActor * HitActor = HitResult.GetActor();
-// 		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
-// 		LockedActor = Cast<ABasePawn>(HitActor);
-// 	}
-// }
-
 void ATank::SwitchTargetAfterKill() {
 	FVector SweepStart = LockedActor->GetActorLocation();
 	FVector SweepEnd = SweepStart + FVector(1);

@@ -146,14 +146,14 @@ void ATank::HandleSwitchTarget() {
 			100
 		);
 		CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
-		DrawDebugBox(
-			GetWorld(),
-			SweepEnd,
-			CollisionBoxVector,
-			SweepUnitVector.Rotation().Quaternion(),
-			FColor::Blue,
-			true
-		);
+		// DrawDebugBox(
+		// 	GetWorld(),
+		// 	SweepEnd,
+		// 	CollisionBoxVector,
+		// 	SweepUnitVector.Rotation().Quaternion(),
+		// 	FColor::Blue,
+		// 	true
+		// );
 		bHit = GetWorld()->SweepSingleByChannel(
 			HitResult,
 			SweepStart,
@@ -214,29 +214,50 @@ bool ATank::CanLock(FHitResult &HitResult) {
 		ProjectileSpawnPoint->GetForwardVector() * LockRange;
 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, this);
 
+	FCollisionShape CollisionBox;
 	FCollisionShape	CollisionSphere;
+	FVector CollisionBoxVector;
 	for (int i = 1; i < 6; i +=2) {
+		CollisionBoxVector = FVector(1, LockRadius * i * 2, 100);
 		CollisionSphere = FCollisionShape::MakeSphere(LockRadius * i);
+		CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
 		bool bHit = GetWorld()->SweepSingleByChannel(
 			HitResult,
-			ProjectileSpawnPoint->GetComponentLocation() + \
-				FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
+			ProjectileSpawnPoint->GetComponentLocation(),
 			EndLoc,
-			FQuat::Identity,
+			ProjectileSpawnPoint->GetComponentRotation().Quaternion(),
 			ECC_GameTraceChannel2,
-			CollisionSphere,
+			CollisionBox,
 			TraceParams
 		);
 
-		DrawDebugSphere(
+		// DrawDebugBox(
+		// 	GetWorld(),
+		// 	GetActorLocation(),
+		// 	CollisionBoxVector,
+		// 	FColor::Purple,
+		// 	false,
+		// 	3.f
+		// );
+		DrawDebugBox(
 			GetWorld(),
-			GetActorLocation(),
-			LockRadius * i,
-			20,
-			FColor::Purple,
-			false,
-			3.f
+			EndLoc,
+			CollisionBoxVector,
+			TurretMesh->GetComponentRotation().Quaternion(),
+			FColor::Orange,
+			true
 		);
+
+		// DrawDebugBox()
+		// DrawDebugSphere(
+		// 	GetWorld(),
+		// 	GetActorLocation(),
+		// 	LockRadius * i,
+		// 	20,
+		// 	FColor::Purple,
+		// 	false,
+		// 	3.f
+		// );
 		if (bHit) return true;
 	}
 

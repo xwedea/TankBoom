@@ -218,7 +218,7 @@ bool ATank::CanLock(FHitResult &HitResult) {
 	FCollisionShape	CollisionSphere;
 	FVector CollisionBoxVector;
 	for (int i = 1; i < 6; i +=2) {
-		CollisionBoxVector = FVector(1, LockRadius * i * 2, 100);
+		CollisionBoxVector = FVector(1, LockRadius * i, 100);
 		CollisionSphere = FCollisionShape::MakeSphere(LockRadius * i);
 		CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
 		bool bHit = GetWorld()->SweepSingleByChannel(
@@ -230,15 +230,6 @@ bool ATank::CanLock(FHitResult &HitResult) {
 			CollisionBox,
 			TraceParams
 		);
-
-		// DrawDebugBox(
-		// 	GetWorld(),
-		// 	GetActorLocation(),
-		// 	CollisionBoxVector,
-		// 	FColor::Purple,
-		// 	false,
-		// 	3.f
-		// );
 		DrawDebugBox(
 			GetWorld(),
 			EndLoc,
@@ -248,16 +239,6 @@ bool ATank::CanLock(FHitResult &HitResult) {
 			true
 		);
 
-		// DrawDebugBox()
-		// DrawDebugSphere(
-		// 	GetWorld(),
-		// 	GetActorLocation(),
-		// 	LockRadius * i,
-		// 	20,
-		// 	FColor::Purple,
-		// 	false,
-		// 	3.f
-		// );
 		if (bHit) return true;
 	}
 

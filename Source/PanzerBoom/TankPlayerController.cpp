@@ -2,6 +2,11 @@
 
 
 #include "TankPlayerController.h"
+#include "Tank.h"
+
+void ATankPlayerController::BeginPlay() {
+	Tank = Cast<ATank>(GetPawn());
+}
 
 void ATankPlayerController::SetPlayerEnabledState(bool bEnabled) {
 
@@ -16,4 +21,20 @@ void ATankPlayerController::SetPlayerEnabledState(bool bEnabled) {
 
 	bShowMouseCursor = bEnabled;
 
+}
+
+FRotator ATankPlayerController::GetRightTSRotation(float &controllerX, float &controllerY) {
+	FVector vectorX = FVector(0, controllerX, 0);
+	FVector vectorY = FVector(controllerY, 0, 0);
+	FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
+
+	FRotator SpringArmRotation = FRotator(
+		0,
+		Tank->GetSpringArmRotation().Yaw,
+		0
+	);
+
+	FRotator FinalRotation = LocalControllerRotation+SpringArmRotation;
+
+	return FinalRotation;
 }

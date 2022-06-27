@@ -32,11 +32,12 @@ public:
 
 	void RotateTurret();
 
-	APlayerController * GetTankController() const { return TankController; }
+	class ATankPlayerController * GetTankController() const { return TankController; }
 	AActor * GetLockedActor() const {return LockedActor;}
 	void SetLockedActor(ABasePawn * Value) {LockedActor = Value;}
 	void SetSpringArmRotation(FRotator Rotation);
 	void SetSpringArmRotationYaw(float Yaw);
+	FRotator GetSpringArmRotation() const;
 	FRotator GetTurretRotation() const {return TurretMesh->GetComponentRotation();}
 
 protected:
@@ -70,7 +71,7 @@ private:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
-		APlayerController * TankController;
+		class ATankPlayerController * TankController;
 
 	ECollisionChannel AimTraceChannel = ECC_GameTraceChannel1;
 	ECollisionChannel SwitchTargetTraceChannel = ECC_GameTraceChannel2;
@@ -86,6 +87,8 @@ private:
 	FTimerHandle SwitchTargetTimerHandle;
 	const float SweepCollisionBoxConst = 2.f/3.f;
 
+	UPROPERTY(EditAnywhere, Category="Combat")
+		float SweepCollisionBoxLength = 300.f;
 
 	UPROPERTY(EditAnywhere, Category="Combat|Timer")
 		float SwitchTargetRate = 0.2f;

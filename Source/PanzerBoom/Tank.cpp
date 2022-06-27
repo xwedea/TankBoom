@@ -10,6 +10,8 @@
 #include "Tower.h"
 #include "CollisionQueryParams.h"
 #include "Missile.h"
+#include "Components/CapsuleComponent.h"
+#include "TankPlayerController.h"
 
 ATank::ATank() {
 	
@@ -24,7 +26,7 @@ ATank::ATank() {
 void ATank::BeginPlay()
 {
 	Super::BeginPlay();
-	TankController = Cast<APlayerController>(GetController());
+	TankController = Cast<ATankPlayerController>(GetController());
 }
 
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -98,8 +100,8 @@ void ATank::LaunchMissile() {
 		Rotation
 	);
 	Missile->SetOwner(this);
+	
 }
-
 
 void ATank::HandleSwitchTarget() {
 	if (IsCoolingDown(SwitchTargetRate, SwitchTargetCountdown)) {
@@ -107,30 +109,35 @@ void ATank::HandleSwitchTarget() {
 	}
 
 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
-	if (abs(controllerX) < 0.5) return;
+	float controllerY = GetInputAxisValue("TurretForward");
+	if (abs(controllerX) < 0.5 && abs(controllerY) < 0.5) {
+		UE_LOG(LogTemp, Display, TEXT("DIDN'T PASS"));
+		return;
+	}
+	UE_LOG(LogTemp, Display, TEXT("PASSED"));
 
-	// Collision
-	bool toRight = (controllerX > 0) ? true : false;
-	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
+	FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
+	FVector SweepUnitVector = FinalRotation.Vector();
+
+
 	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
 	
 	FVector CollisionBoxVector = FVector(
 		1,
-		DistanceToTarget * SweepCollisionBoxConst,
+		SweepCollisionBoxLength,
 		100
 	);
-	FVector SweepStart = GetActorLocation() + 
-		TurretMesh->GetForwardVector() * DistanceToTarget * SweepCollisionBoxConst;
+	FVector SweepStart = LockedActor->GetActorLocation() + SweepUnitVector * 50;
 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
 
-	// DrawDebugBox(
-	// 	GetWorld(),
-	// 	SweepEnd,
-	// 	CollisionBoxVector,
-	// 	SweepUnitVector.Rotation().Quaternion(),
-	// 	FColor::Red,
-	// 	true
-	// );
+	DrawDebugBox(
+		GetWorld(),
+		SweepStart,
+		CollisionBoxVector,
+		SweepUnitVector.Rotation().Quaternion(),
+		FColor::Red,
+		true
+	);
 	
 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
@@ -152,6 +159,60 @@ void ATank::HandleSwitchTarget() {
 		LockedActor = Cast<ABasePawn>(HitActor);
 	}
 }
+
+
+
+// void ATank::HandleSwitchTarget() {
+// 	if (IsCoolingDown(SwitchTargetRate, SwitchTargetCountdown)) {
+// 		return;
+// 	}
+
+// 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
+// 	if (abs(controllerX) < 0.5) return;
+
+// 	// Collision
+// 	bool toRight = (controllerX > 0) ? true : false;
+// 	FVector SweepUnitVector = (toRight) ? TurretMesh->GetRightVector() : -TurretMesh->GetRightVector();	
+// 	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
+	
+// 	FVector CollisionBoxVector = FVector(
+// 		1,
+// 		DistanceToTarget * SweepCollisionBoxConst,
+// 		100
+// 	);
+// 	FVector SweepStart = GetActorLocation() + 
+// 		TurretMesh->GetForwardVector() * DistanceToTarget * SweepCollisionBoxConst;
+// 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
+
+// 	// DrawDebugBox(
+// 	// 	GetWorld(),
+// 	// 	SweepEnd,
+// 	// 	CollisionBoxVector,
+// 	// 	SweepUnitVector.Rotation().Quaternion(),
+// 	// 	FColor::Red,
+// 	// 	true
+// 	// );
+	
+// 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
+// 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
+// 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
+// 	FHitResult HitResult;
+// 	bool bHit = GetWorld()->SweepSingleByChannel(
+// 		HitResult,
+// 		SweepStart,
+// 		SweepEnd,
+// 		SweepUnitVector.Rotation().Quaternion(),
+// 		ECC_GameTraceChannel2,
+// 		CollisionBox,
+// 		TraceParams
+// 	);
+
+// 	if (bHit) {
+// 		AActor * HitActor = HitResult.GetActor();
+// 		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
+// 		LockedActor = Cast<ABasePawn>(HitActor);
+// 	}
+// }
 
 void ATank::SwitchTargetAfterKill() {
 	FVector SweepStart = LockedActor->GetActorLocation();
@@ -233,22 +294,9 @@ void ATank::RotateTurret() {
 	if (!LockedActor) {
 		float controllerX = GetInputAxisValue(TEXT("TurretRight"));
 		float controllerY = GetInputAxisValue("TurretForward");
-		if (controllerX == 0 && controllerY == 0) return;
+		if (abs(controllerX) < 0.5 && abs(controllerY) < 0.5) return;
 
-		FVector vectorX = FVector(0, controllerX, 0);
-		FVector vectorY = FVector(controllerY, 0, 0);
-		FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();
-		// UE_LOG(LogTemp, Warning, TEXT("Controller Local Rotation: %s"), *LocalControllerRotation.ToString());
-
-		FRotator SpringArmRotation = FRotator(
-			0,
-			SpringArm->GetComponentRotation().Yaw,
-			0
-		);
-		// UE_LOG(LogTemp, Warning, TEXT("Camera World Rotation: %s"), *CameraRotation.ToString());
-
-		FRotator FinalRotation = LocalControllerRotation+SpringArmRotation;
-		// UE_LOG(LogTemp, Warning, TEXT("Final Rotation: %s"), *CameraRotation.ToString());
+		FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
 
 		NewRotation = FMath::RInterpConstantTo(
 			TurretMesh->GetComponentRotation(),
@@ -304,4 +352,9 @@ void ATank::SetSpringArmRotationYaw(float Yaw) {
 	FRotator SpringArmRot = SpringArm->GetComponentRotation();
 	SpringArmRot.Yaw = Yaw;
 	SpringArm->SetWorldRotation(SpringArmRot);
+}
+
+
+FRotator ATank::GetSpringArmRotation() const {
+	return SpringArm->GetComponentRotation();
 }

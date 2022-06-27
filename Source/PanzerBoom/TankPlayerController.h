@@ -18,4 +18,12 @@ class PANZERBOOM_API ATankPlayerController : public APlayerController
 public:
 	void SetPlayerEnabledState(bool bEnabled);
 
+	FRotator GetRightTSRotation(float &controllerX, float &controllerY);
+
+protected:
+	virtual void BeginPlay();
+
+private:
+	class ATank * Tank;
+
 };

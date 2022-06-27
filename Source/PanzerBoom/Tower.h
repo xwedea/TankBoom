@@ -25,15 +25,15 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	class ATank * Tank;
+	float FireRate = 2;
 
 private:
-	class ATank * Tank;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement",meta = (AllowPrivateAccess = "true"));
 		float Range;
 	
 	FTimerHandle FireRateTimerHandle;
-	float FireRate = 2;
 
 	void CheckFireCondition();
 	bool TankInRange();

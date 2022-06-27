@@ -91,7 +91,9 @@ void ATank::AimLock() {
 	bool bHit = CanLock(HitResult);
 	if (bHit) {
 		LockedActor = Cast<ABasePawn>(HitResult.GetActor());
-		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
+		if (LockedActor) {
+			SetSpringArmRotationYaw(GetTurretRotation().Yaw);
+		}
 	}
 	
 	return;
@@ -230,14 +232,14 @@ bool ATank::CanLock(FHitResult &HitResult) {
 			CollisionBox,
 			TraceParams
 		);
-		DrawDebugBox(
-			GetWorld(),
-			EndLoc,
-			CollisionBoxVector,
-			TurretMesh->GetComponentRotation().Quaternion(),
-			FColor::Orange,
-			true
-		);
+		// DrawDebugBox(
+		// 	GetWorld(),
+		// 	EndLoc,
+		// 	CollisionBoxVector,
+		// 	TurretMesh->GetComponentRotation().Quaternion(),
+		// 	FColor::Orange,
+		// 	true
+		// );
 
 		if (bHit) return true;
 	}

@@ -25,6 +25,8 @@ public:
 
 	void Countdown(float &Rate, float &Countdown);
 
+	float GetCapsuleRadius() const;
+
 	virtual void HandleAllCountdowns();
 
 	virtual void Tick(float DeltaTime) override;

@@ -65,6 +65,10 @@ private:
 		float SwitchTargetRadius = 500.f;
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float SwitchTargetRange = 1500.f;
+	UPROPERTY(EditAnywhere, Category = "Combat");
+		float LockRadius = 300.f;
+	UPROPERTY(EditAnywhere, Category="Combat")
+		float LockRange = 1000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		TSubclassOf<class AMissile> MissileClass;
@@ -86,6 +90,8 @@ private:
 	void HandleSwitchTarget();
 	FTimerHandle SwitchTargetTimerHandle;
 	const float SweepCollisionBoxConst = 2.f/3.f;
+
+	bool CanLock(struct FHitResult &HitResult);
 
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float SweepCollisionBoxLength = 300.f;

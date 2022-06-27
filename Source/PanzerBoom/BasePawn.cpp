@@ -119,3 +119,7 @@ void ABasePawn::Countdown(float &Rate, float &Countdown) {
 FVector ABasePawn::GetTurretLocation() const {
 	return TurretMesh->GetComponentLocation();
 }
+
+float ABasePawn::GetCapsuleRadius() const {
+	return CapsuleComp->GetScaledCapsuleRadius();
+}

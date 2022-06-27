@@ -51,6 +51,10 @@ void ATank::Tick(float DeltaTime)
 	RotateTurret();
 
 	if (LockedActor) {
+		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > AimRange + AimRadius) {
+			LockedActor = nullptr;
+			return;
+		}
 		HandleSwitchTarget();
 		if (LockedActor->bAlive) {
 			DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
@@ -76,10 +80,13 @@ void ATank::AimLock() {
 		return;
 	}
 
-	if (AimedActor) {
-		LockedActor = AimedActor;
+	FHitResult HitResult;
+	bool bHit = CanLock(HitResult);
+	if (bHit) {
+		LockedActor = Cast<ABasePawn>(HitResult.GetActor());
 		SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 	}
+	
 	return;
 }
 
@@ -192,6 +199,25 @@ void ATank::HandleTargetUnlock() {
 	SetSpringArmRotationYaw(GetActorRotation().Yaw);
 }
 
+bool ATank::CanLock(FHitResult &HitResult) {
+	FVector EndLoc = ProjectileSpawnPoint->GetComponentLocation() + \
+		ProjectileSpawnPoint->GetForwardVector() * LockRange;
+
+	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(LockRadius);
+	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, this);
+	
+	return GetWorld()->SweepSingleByChannel(
+		HitResult,
+		ProjectileSpawnPoint->GetComponentLocation() + \
+			FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
+		EndLoc,
+		FQuat::Identity,
+		ECC_GameTraceChannel2,
+		CollisionSphere,
+		TraceParams
+	);
+}
+
 void ATank::Aim() {
 
 	FHitResult HitResult;
@@ -200,14 +226,16 @@ void ATank::Aim() {
 
 	FCollisionShape CollisionBox = FCollisionShape::MakeBox(FVector(10, 10, 1));
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(AimRadius);
+	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, this);
+
 	bAiming = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		ProjectileSpawnPoint->GetComponentLocation() + \
-			FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
+		ProjectileSpawnPoint->GetComponentLocation(),
 		EndLoc,
 		FQuat::Identity,
 		ECC_GameTraceChannel1,
-		CollisionSphere
+		CollisionSphere,
+		TraceParams
 	);
 
 	if (!bAiming) {
@@ -219,9 +247,14 @@ void ATank::Aim() {
 	AimedActor = Cast<ABasePawn>(HitResult.GetActor());
 	if (AimedActor) {
 		if (AimedActor->ActorHasTag("Enemy")) {
-		
 			if (AimedActor != LockedActor) {
-				DrawSphere(AimedActor->GetActorLocation(), FColor::Green);
+				DrawDebugSphere(
+					GetWorld(),
+					AimedActor->GetActorLocation(),
+					AimedActor->GetCapsuleRadius(),
+					6,
+					FColor::Green
+				);
 			}
 		}
 

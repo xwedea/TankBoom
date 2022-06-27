@@ -116,9 +116,6 @@ void ATank::HandleSwitchTarget() {
 
 	FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
 	FVector SweepUnitVector = FinalRotation.Vector();
-
-
-	float DistanceToTarget = (LockedActor->GetActorLocation() - GetActorLocation()).Length();
 	
 	FVector CollisionBoxVector = FVector(
 		1,
@@ -130,7 +127,7 @@ void ATank::HandleSwitchTarget() {
 
 	DrawDebugBox(
 		GetWorld(),
-		SweepStart,
+		SweepEnd,
 		CollisionBoxVector,
 		SweepUnitVector.Rotation().Quaternion(),
 		FColor::Red,
@@ -155,7 +152,40 @@ void ATank::HandleSwitchTarget() {
 		AActor * HitActor = HitResult.GetActor();
 		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
 		LockedActor = Cast<ABasePawn>(HitActor);
+		return;
 	}
+
+	// second sweep
+	CollisionBoxVector = FVector(
+		1,
+		SweepCollisionBoxLength * 4,
+		100
+	);
+	CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
+	DrawDebugBox(
+		GetWorld(),
+		SweepEnd,
+		CollisionBoxVector,
+		SweepUnitVector.Rotation().Quaternion(),
+		FColor::Blue,
+		true
+	);
+	bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		SweepStart,
+		SweepEnd,
+		SweepUnitVector.Rotation().Quaternion(),
+		ECC_GameTraceChannel2,
+		CollisionBox,
+		TraceParams
+	);
+	if (bHit) {
+		AActor * HitActor = HitResult.GetActor();
+		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
+		LockedActor = Cast<ABasePawn>(HitActor);
+		return;
+	}
+
 }
 
 

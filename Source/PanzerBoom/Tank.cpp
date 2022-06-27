@@ -116,74 +116,45 @@ void ATank::HandleSwitchTarget() {
 
 	FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
 	FVector SweepUnitVector = FinalRotation.Vector();
-	
-	FVector CollisionBoxVector = FVector(
-		1,
-		SweepCollisionBoxLength,
-		100
-	);
 	FVector SweepStart = LockedActor->GetActorLocation() + SweepUnitVector * 50;
 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
 
-	DrawDebugBox(
-		GetWorld(),
-		SweepEnd,
-		CollisionBoxVector,
-		SweepUnitVector.Rotation().Quaternion(),
-		FColor::Red,
-		true
-	);
-	
-	FCollisionShape CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
-	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(SwitchTargetRadius);
-	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
+	FVector CollisionBoxVector;
+	FCollisionShape CollisionBox;
+	FCollisionShape CollisionSphere;
 	FHitResult HitResult;
-	bool bHit = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		SweepStart,
-		SweepEnd,
-		SweepUnitVector.Rotation().Quaternion(),
-		ECC_GameTraceChannel2,
-		CollisionBox,
-		TraceParams
-	);
-
-	if (bHit) {
-		AActor * HitActor = HitResult.GetActor();
-		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
-		LockedActor = Cast<ABasePawn>(HitActor);
-		return;
-	}
-
-	// second sweep
-	CollisionBoxVector = FVector(
-		1,
-		SweepCollisionBoxLength * 4,
-		100
-	);
-	CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
-	DrawDebugBox(
-		GetWorld(),
-		SweepEnd,
-		CollisionBoxVector,
-		SweepUnitVector.Rotation().Quaternion(),
-		FColor::Blue,
-		true
-	);
-	bHit = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		SweepStart,
-		SweepEnd,
-		SweepUnitVector.Rotation().Quaternion(),
-		ECC_GameTraceChannel2,
-		CollisionBox,
-		TraceParams
-	);
-	if (bHit) {
-		AActor * HitActor = HitResult.GetActor();
-		UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
-		LockedActor = Cast<ABasePawn>(HitActor);
-		return;
+	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, LockedActor);
+	bool bHit;
+	for (int i = 1; i < 6; i += 2) {
+		CollisionBoxVector = FVector(
+			1,
+			SweepCollisionBoxLength * i,
+			100
+		);
+		CollisionBox = FCollisionShape::MakeBox(CollisionBoxVector);
+		DrawDebugBox(
+			GetWorld(),
+			SweepEnd,
+			CollisionBoxVector,
+			SweepUnitVector.Rotation().Quaternion(),
+			FColor::Blue,
+			true
+		);
+		bHit = GetWorld()->SweepSingleByChannel(
+			HitResult,
+			SweepStart,
+			SweepEnd,
+			SweepUnitVector.Rotation().Quaternion(),
+			ECC_GameTraceChannel2,
+			CollisionBox,
+			TraceParams
+		);
+		if (bHit) {
+			AActor * HitActor = HitResult.GetActor();
+			UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
+			LockedActor = Cast<ABasePawn>(HitActor);
+			return;
+		}
 	}
 
 }

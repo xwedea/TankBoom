@@ -66,9 +66,9 @@ private:
 	UPROPERTY(EditAnywhere, Category="Combat")
 		float SwitchTargetRange = 1500.f;
 	UPROPERTY(EditAnywhere, Category = "Combat");
-		float LockRadius = 300.f;
+		float LockRadius = 300.f; 
 	UPROPERTY(EditAnywhere, Category="Combat")
-		float LockRange = 1000.f;
+		float LockRange = 1000.f; // changed in beginplay()
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		TSubclassOf<class AMissile> MissileClass;

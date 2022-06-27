@@ -121,5 +121,11 @@ FVector ABasePawn::GetTurretLocation() const {
 }
 
 float ABasePawn::GetCapsuleRadius() const {
-	return CapsuleComp->GetScaledCapsuleRadius();
+	if (CapsuleComp) {
+		return CapsuleComp->GetScaledCapsuleRadius();
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("%s: No Capsule Component!"), *GetActorNameOrLabel());
+	}
+	return 0;
 }

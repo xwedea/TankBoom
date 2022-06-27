@@ -27,6 +27,7 @@ void ATank::BeginPlay()
 {
 	Super::BeginPlay();
 	TankController = Cast<ATankPlayerController>(GetController());
+	LockRange = AimRange + AimRadius;
 }
 
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
@@ -51,13 +52,19 @@ void ATank::Tick(float DeltaTime)
 	RotateTurret();
 
 	if (LockedActor) {
-		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > AimRange + AimRadius) {
+		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > LockRange) {
 			LockedActor = nullptr;
 			return;
 		}
 		HandleSwitchTarget();
 		if (LockedActor->bAlive) {
-			DrawSphere(LockedActor->GetActorLocation(), FColor::Red);
+			DrawDebugSphere(
+				GetWorld(),
+				LockedActor->GetActorLocation(),
+				LockedActor->GetCapsuleRadius(),
+				10,
+				FColor::Red
+			);
 			SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 		}
 	}
@@ -158,6 +165,9 @@ void ATank::HandleSwitchTarget() {
 		);
 		if (bHit) {
 			AActor * HitActor = HitResult.GetActor();
+			if ((HitActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > LockRange) {
+				break;
+			}
 			UE_LOG(LogTemp, Display, TEXT("Switch to %s"), *HitActor->GetActorNameOrLabel());
 			LockedActor = Cast<ABasePawn>(HitActor);
 			return;
@@ -202,20 +212,35 @@ void ATank::HandleTargetUnlock() {
 bool ATank::CanLock(FHitResult &HitResult) {
 	FVector EndLoc = ProjectileSpawnPoint->GetComponentLocation() + \
 		ProjectileSpawnPoint->GetForwardVector() * LockRange;
-
-	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(LockRadius);
 	FCollisionQueryParams TraceParams(FName(TEXT("Platform Trace")), true, this);
-	
-	return GetWorld()->SweepSingleByChannel(
-		HitResult,
-		ProjectileSpawnPoint->GetComponentLocation() + \
-			FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
-		EndLoc,
-		FQuat::Identity,
-		ECC_GameTraceChannel2,
-		CollisionSphere,
-		TraceParams
-	);
+
+	FCollisionShape	CollisionSphere;
+	for (int i = 1; i < 6; i +=2) {
+		CollisionSphere = FCollisionShape::MakeSphere(LockRadius * i);
+		bool bHit = GetWorld()->SweepSingleByChannel(
+			HitResult,
+			ProjectileSpawnPoint->GetComponentLocation() + \
+				FVector(0, 0, 100) + ProjectileSpawnPoint->GetForwardVector() * 100,
+			EndLoc,
+			FQuat::Identity,
+			ECC_GameTraceChannel2,
+			CollisionSphere,
+			TraceParams
+		);
+
+		DrawDebugSphere(
+			GetWorld(),
+			GetActorLocation(),
+			LockRadius * i,
+			20,
+			FColor::Purple,
+			false,
+			3.f
+		);
+		if (bHit) return true;
+	}
+
+	return false;
 }
 
 void ATank::Aim() {

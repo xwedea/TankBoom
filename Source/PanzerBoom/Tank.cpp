@@ -111,10 +111,8 @@ void ATank::HandleSwitchTarget() {
 	float controllerX = GetInputAxisValue(TEXT("TurretRight"));
 	float controllerY = GetInputAxisValue("TurretForward");
 	if (abs(controllerX) < 0.5 && abs(controllerY) < 0.5) {
-		UE_LOG(LogTemp, Display, TEXT("DIDN'T PASS"));
 		return;
 	}
-	UE_LOG(LogTemp, Display, TEXT("PASSED"));
 
 	FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
 	FVector SweepUnitVector = FinalRotation.Vector();
@@ -277,7 +275,6 @@ void ATank::Aim() {
 		
 			if (AimedActor != LockedActor) {
 				DrawSphere(AimedActor->GetActorLocation(), FColor::Green);
-				
 			}
 		}
 

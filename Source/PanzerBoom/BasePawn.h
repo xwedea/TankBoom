@@ -19,6 +19,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		bool bCanAttack = true;
 
+	FVector GetTurretLocation() const;
+
 	bool IsCoolingDown(float &Rate, float &Countdown);
 
 	void Countdown(float &Rate, float &Countdown);

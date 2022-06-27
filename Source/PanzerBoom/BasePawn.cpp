@@ -14,12 +14,12 @@ ABasePawn::ABasePawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collider"));
+	RootComponent = CapsuleComp;
 
 	BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>("Base Mesh");
-	RootComponent = BaseMesh;
+	BaseMesh->SetupAttachment(RootComponent);
 	
-	CapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collider"));
-	CapsuleComp->SetupAttachment(BaseMesh);
 	
 	TurretMesh = CreateDefaultSubobject<UStaticMeshComponent>("Turret Mesh");
 	TurretMesh->SetupAttachment(BaseMesh);
@@ -33,6 +33,7 @@ ABasePawn::ABasePawn()
 void ABasePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	HandleAllCountdowns();
 }
 
 void ABasePawn::HandleAllCountdowns() {
@@ -113,4 +114,8 @@ void ABasePawn::Countdown(float &Rate, float &Countdown) {
 		UE_LOG(LogTemp, Warning, TEXT("%s: Countdown below zero!"), *GetActorNameOrLabel());
 	}
 	
+}
+
+FVector ABasePawn::GetTurretLocation() const {
+	return TurretMesh->GetComponentLocation();
 }

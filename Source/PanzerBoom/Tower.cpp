@@ -8,6 +8,9 @@
 #include "TimerManager.h"
 
 
+ATower::ATower() {
+	UE_LOG(LogTemp, Warning, TEXT("ATower();"));
+}
 
 void  ATower::BeginPlay() {
 	Super::BeginPlay();

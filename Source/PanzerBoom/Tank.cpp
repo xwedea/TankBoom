@@ -51,7 +51,11 @@ void ATank::Tick(float DeltaTime)
 	HandleAllCountdowns();
 
 	if (LockedActor) {
-		LockedMovement();
+		{
+			// LockedMovement();
+			Move();
+			Turn();
+		}
 		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > LockRange) {
 			LockedActor = nullptr;
 			return;

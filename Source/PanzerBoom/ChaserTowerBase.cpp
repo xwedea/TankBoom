@@ -22,26 +22,27 @@ void AChaserTowerBase::Tick(float DeltaTime) {
 }
 
 void AChaserTowerBase::Chase() {
+	if (!Tank) {
+		UE_LOG(LogTemp, Warning, TEXT("%s: No Tank Found!"), *GetActorNameOrLabel());
+		return;
+	}
 	FVector TankLoc = Tank->GetActorLocation();
 	FVector TowerLoc = GetActorLocation();
+	FVector Destination = (TowerLoc - TankLoc).Rotation().Vector() * ChaseDistance + TankLoc;
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 
 	float Distance = FVector::Dist2D(TankLoc, TowerLoc);
-
-	if (Distance > ChaseRadius) {
+	if (!InfiniteRange && Distance > ChaseRadius) {
 		return;
 	}
 
 	FVector NewLoc = FMath::VInterpConstantTo(
 		TowerLoc,
-		TankLoc,
+		Destination,
 		DeltaTime,
 		ChaseSpeed
 	);
-
 	SetActorLocation(NewLoc, true);
-
 	TurretMesh->SetWorldRotation((TankLoc-TowerLoc).Rotation());
-
 }
 

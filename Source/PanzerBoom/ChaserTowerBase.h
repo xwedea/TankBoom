@@ -26,6 +26,12 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category="Movement")
 		float ChaseRadius = 5000.f;
+
+	UPROPERTY(EditAnywhere, Category="Movement")
+		float ChaseDistance = 400.f;
+
+	UPROPERTY(EditAnywhere, Category="Movement")
+		bool InfiniteRange = true;
 	
 	UPROPERTY(EditAnywhere, Category="Movement")
 		float ChaseSpeed = 100.f;

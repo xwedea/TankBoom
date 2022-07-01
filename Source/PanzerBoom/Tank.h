@@ -24,6 +24,7 @@ public:
 
 	void Move();
 	void Turn();
+	void LockedMovement();
 	void HandleDestruction();
 	void HandleTargetUnlock();
 	void SwitchTargetAfterKill();

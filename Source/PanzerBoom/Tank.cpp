@@ -44,21 +44,40 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	PlayerInputComponent->BindAction("AimLock", IE_Pressed, this, &ATank::AimLock);
 }
 
+void ATank::LockedMovement() {
+	float controllerX = GetInputAxisValue("Turn");
+	float controllerY = GetInputAxisValue("MoveForward");
+
+	if (abs(controllerX) < 0.3 && abs(controllerY) < 0.3) {
+		return;
+	}	
+	float controllerLength = FMath::Sqrt(FMath::Square(controllerX) + FMath::Square(controllerY));
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+
+	// rotate
+	FRotator FinalRotation = TankController->GetTSWorldRotation(controllerX, controllerY);
+	FRotator NewRotation = FMath::RInterpConstantTo(
+		BaseMesh->GetComponentRotation(),
+		FinalRotation, 
+		DeltaTime, 
+		TurnRate
+	);
+	BaseMesh->SetWorldRotation(NewRotation);
+	
+	// move forward
+	float ForwardOffset = controllerLength * Speed * DeltaTime;
+	FVector DeltaLocation = BaseMesh->GetForwardVector() * ForwardOffset;
+	AddActorWorldOffset(DeltaLocation);
+}
+
 // Called every frame
 void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	HandleAllCountdowns();
-	Aim();
-	RotateTurret();
-
-	
-	Move();
-	Turn();
-
 
 	if (LockedActor) {
+		LockedMovement();
 		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > LockRange) {
 			LockedActor = nullptr;
 			return;
@@ -75,6 +94,13 @@ void ATank::Tick(float DeltaTime)
 			SetSpringArmRotationYaw(GetTurretRotation().Yaw);
 		}
 	}
+	else {
+		Move();
+		Turn();
+	}
+
+	Aim();
+	RotateTurret();
 }
 
 void ATank::HandleAllCountdowns() {
@@ -215,7 +241,8 @@ void ATank::SwitchTargetAfterKill() {
 
 void ATank::HandleTargetUnlock() {
 	LockedActor = nullptr;
-	SetSpringArmRotationYaw(GetActorRotation().Yaw);
+	// SetActorRotation(BaseMesh->GetComponentRotation());
+	SetSpringArmRotationYaw(BaseMesh->GetComponentRotation().Yaw);
 }
 
 bool ATank::CanLock(FHitResult &HitResult) {
@@ -333,8 +360,8 @@ void ATank::Move() {
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
 	float ForwardOffset = controllerY * Speed * DeltaTime;
 
-	FVector DeltaLocation(ForwardOffset, 0.0f, 0.0f);
-	AddActorLocalOffset(DeltaLocation, true);
+	FVector DeltaLocation = BaseMesh->GetForwardVector() * ForwardOffset;
+	AddActorWorldOffset(DeltaLocation, true);
 }
 
 void ATank::Turn() {

@@ -44,32 +44,6 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	PlayerInputComponent->BindAction("AimLock", IE_Pressed, this, &ATank::AimLock);
 }
 
-void ATank::LockedMovement() {
-	float controllerX = GetInputAxisValue("Turn");
-	float controllerY = GetInputAxisValue("MoveForward");
-
-	if (abs(controllerX) < 0.3 && abs(controllerY) < 0.3) {
-		return;
-	}	
-	float controllerLength = FMath::Sqrt(FMath::Square(controllerX) + FMath::Square(controllerY));
-	float DeltaTime = GetWorld()->GetDeltaSeconds();
-
-	// rotate
-	FRotator FinalRotation = TankController->GetTSWorldRotation(controllerX, controllerY);
-	FRotator NewRotation = FMath::RInterpConstantTo(
-		BaseMesh->GetComponentRotation(),
-		FinalRotation, 
-		DeltaTime, 
-		TurnRate
-	);
-	BaseMesh->SetWorldRotation(NewRotation);
-	
-	// move forward
-	float ForwardOffset = controllerLength * Speed * DeltaTime;
-	FVector DeltaLocation = BaseMesh->GetForwardVector() * ForwardOffset;
-	AddActorWorldOffset(DeltaLocation);
-}
-
 // Called every frame
 void ATank::Tick(float DeltaTime)
 {
@@ -97,6 +71,7 @@ void ATank::Tick(float DeltaTime)
 	else {
 		Move();
 		Turn();
+		// LockedMovement();
 	}
 
 	Aim();
@@ -352,6 +327,35 @@ void ATank::RotateTurret() {
 
 
 	TurretMesh->SetWorldRotation(NewRotation);
+}
+
+
+void ATank::LockedMovement() {
+	float controllerX = GetInputAxisValue("Turn");
+	float controllerY = GetInputAxisValue("MoveForward");
+
+	if (abs(controllerX) < 0.3 && abs(controllerY) < 0.3) {
+		return;
+	}	
+	float controllerLength = FMath::Sqrt(FMath::Square(controllerX) + FMath::Square(controllerY));
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+
+	// rotate
+	FRotator FinalRotation = TankController->GetTSWorldRotation(controllerX, controllerY);
+	if (FinalRotation.Yaw != BaseMesh->GetComponentRotation().Yaw) {
+		FRotator NewRotation = FMath::RInterpConstantTo(
+			BaseMesh->GetComponentRotation(),
+			FinalRotation, 
+			DeltaTime, 
+			TurnRate
+		);
+		BaseMesh->SetWorldRotation(NewRotation);
+	}
+	
+	// move forward
+	float ForwardOffset = controllerLength * Speed * DeltaTime;
+	FVector DeltaLocation = BaseMesh->GetForwardVector() * ForwardOffset;
+	AddActorWorldOffset(DeltaLocation);
 }
 
 void ATank::Move() {

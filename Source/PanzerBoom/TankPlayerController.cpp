@@ -23,7 +23,13 @@ void ATankPlayerController::SetPlayerEnabledState(bool bEnabled) {
 
 }
 
-FRotator ATankPlayerController::GetRightTSRotation(float &controllerX, float &controllerY) {
+FRotator ATankPlayerController::GetTSLocalRotation(float &controllerX, float &controllerY) {
+	FVector vectorX = FVector(0, controllerX, 0);
+	FVector vectorY = FVector(controllerY, 0, 0);
+	return (vectorX + vectorY).Rotation();
+}
+
+FRotator ATankPlayerController::GetTSWorldRotation(float &controllerX, float &controllerY) {
 	FVector vectorX = FVector(0, controllerX, 0);
 	FVector vectorY = FVector(controllerY, 0, 0);
 	FRotator LocalControllerRotation = (vectorX + vectorY).Rotation();

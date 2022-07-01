@@ -28,13 +28,15 @@ void ATank::BeginPlay()
 	Super::BeginPlay();
 	TankController = Cast<ATankPlayerController>(GetController());
 	LockRange = AimRange + AimRadius;
+
+
 }
 
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ATank::Move);
-	PlayerInputComponent->BindAxis("Turn", this, &ATank::Turn);
+	PlayerInputComponent->BindAxis("MoveForward");
+	PlayerInputComponent->BindAxis("Turn");
 	PlayerInputComponent->BindAxis("TurretRight");
 	PlayerInputComponent->BindAxis("TurretForward");
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATank::Fire);
@@ -50,6 +52,11 @@ void ATank::Tick(float DeltaTime)
 	HandleAllCountdowns();
 	Aim();
 	RotateTurret();
+
+	
+	Move();
+	Turn();
+
 
 	if (LockedActor) {
 		if ((LockedActor->GetActorLocation() - ProjectileSpawnPoint->GetComponentLocation()).Length() > LockRange) {
@@ -130,7 +137,7 @@ void ATank::HandleSwitchTarget() {
 		return;
 	}
 
-	FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
+	FRotator FinalRotation = TankController->GetTSWorldRotation(controllerX, controllerY);
 	FVector SweepUnitVector = FinalRotation.Vector();
 	FVector SweepStart = LockedActor->GetActorLocation() + SweepUnitVector * 50;
 	FVector SweepEnd = SweepStart + SweepUnitVector * SwitchTargetRange;
@@ -302,7 +309,7 @@ void ATank::RotateTurret() {
 		float controllerY = GetInputAxisValue("TurretForward");
 		if (abs(controllerX) < 0.5 && abs(controllerY) < 0.5) return;
 
-		FRotator FinalRotation = TankController->GetRightTSRotation(controllerX, controllerY);
+		FRotator FinalRotation = TankController->GetTSWorldRotation(controllerX, controllerY);
 
 		NewRotation = FMath::RInterpConstantTo(
 			TurretMesh->GetComponentRotation(),
@@ -320,17 +327,20 @@ void ATank::RotateTurret() {
 	TurretMesh->SetWorldRotation(NewRotation);
 }
 
-void ATank::Move(float Value) {
+void ATank::Move() {
+	float controllerY = GetInputAxisValue(TEXT("MoveForward"));
+
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
-	float ForwardOffset = Value * Speed * DeltaTime;
+	float ForwardOffset = controllerY * Speed * DeltaTime;
 
 	FVector DeltaLocation(ForwardOffset, 0.0f, 0.0f);
 	AddActorLocalOffset(DeltaLocation, true);
 }
 
-void ATank::Turn(float Value) {
+void ATank::Turn() {
+	float controllerX = GetInputAxisValue(TEXT("Turn"));
 	float DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(this);
-	float TurnVal = Value * TurnRate * DeltaTime;
+	float TurnVal = controllerX * TurnRate * DeltaTime;
 
 	FRotator TurnOffset(0, TurnVal, 0);
 	AddActorLocalRotation(TurnOffset, true);

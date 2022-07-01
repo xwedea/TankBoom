@@ -22,8 +22,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Move(float Value);
-	void Turn(float Value);
+	void Move();
+	void Turn();
 	void HandleDestruction();
 	void HandleTargetUnlock();
 	void SwitchTargetAfterKill();
